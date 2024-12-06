@@ -1,3 +1,3 @@
-import { main } from './day4';
+import { main } from './day5';
 
 main();
