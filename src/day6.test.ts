@@ -1,4 +1,3 @@
-import { start } from 'repl';
 import {
   Direction,
   findLoops,
@@ -55,6 +54,13 @@ describe('day6', () => {
     let result = findTravelDistance(input);
 
     expect(result).toBe(4515);
+  });
+
+  test('part2', async () => {
+    let input = await loadInput('input/day6');
+    let result = findLoops(input);
+
+    expect(result).toBe(1309);
   });
 
   test('parseMap', () => {

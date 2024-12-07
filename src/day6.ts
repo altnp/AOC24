@@ -114,11 +114,26 @@ function findTravelDistance(map: string[][]) {
 }
 
 function findLoops(map: string[][]) {
+  let totalRows = map.length;
+  let totalColumns = map[0].length;
+  let loops = 0;
+  for (let r = 0; r < totalRows; r++) {
+    for (let c = 0; c < totalColumns; c++) {
+      if (map[r][c] === '.') {
+        map[r][c] = '#';
+        if (!exits(map)) {
+          loops++;
+        }
+        map[r][c] = '.';
+      }
+    }
+  }
+
+  return loops;
+}
+
+function exits(map: string[][]) {
   let visited = new Set<string>();
-  let stops = new Set<string>();
-  let stopsByColumn = new Map<string, number[]>();
-  let stopsByRow = new Map<string, number[]>();
-  let insertedObjects = new Set<string>();
   let totalRows = map.length;
   let totalColumns = map[0].length;
   let { objectsByRow, objectsByColumn, start } = parseMap(map);
@@ -136,18 +151,8 @@ function findLoops(map: string[][]) {
             .filter((v) => v < row)
             .reduce((max, v) => (v > max ? v : max), -1);
 
-          if (nextObject === -1) exited = true;
+          if (nextObject === -1) return true;
           nextPos = [nextObject + 1, column, nextDirection(direction)];
-
-          let visitedRow = row;
-          while (visitedRow > nextObject) {
-            visited.add(`${visitedRow},${column}`);
-
-            if (stopsByRow.get(`${visitedRow}`)?.filter((v) => v > column)) {
-              insertedObjects.add(`${visitedRow - 1},${column}`);
-            }
-            visitedRow--;
-          }
         }
         break;
       case Direction.Right:
@@ -157,17 +162,8 @@ function findLoops(map: string[][]) {
             .filter((v) => v > column)
             .reduce((max, v) => (v < max ? v : max), totalColumns + 1);
 
-          if (nextObject === totalColumns + 1) exited = true;
+          if (nextObject === totalColumns + 1) return true;
           nextPos = [row, nextObject - 1, nextDirection(direction)];
-
-          let visitedColumn = column;
-          while (visitedColumn < nextObject) {
-            visited.add(`${row},${visitedColumn}`);
-            if (stopsByColumn.get(`${visitedColumn}`)?.filter((v) => v > row)) {
-              insertedObjects.add(`${row},${visitedColumn + 1}`);
-            }
-            visitedColumn++;
-          }
         }
         break;
       case Direction.Down:
@@ -177,18 +173,8 @@ function findLoops(map: string[][]) {
             .filter((v) => v > row)
             .reduce((max, v) => (v < max ? v : max), totalRows + 1);
 
-          if (nextObject === totalRows + 1) exited = true;
+          if (nextObject === totalRows + 1) return true;
           nextPos = [nextObject - 1, column, nextDirection(direction)];
-
-          let visitedRow = row;
-          while (visitedRow < nextObject) {
-            visited.add(`${visitedRow},${column}`);
-
-            if (stopsByRow.get(`${visitedRow}`)?.filter((v) => v < column)) {
-              insertedObjects.add(`${visitedRow + 1},${column}`);
-            }
-            visitedRow++;
-          }
         }
         break;
       case Direction.Left:
@@ -198,48 +184,36 @@ function findLoops(map: string[][]) {
             .filter((v) => v < column)
             .reduce((max, v) => (v > max ? v : max), -1);
 
-          if (nextObject === -1) exited = true;
+          if (nextObject === -1) return true;
           nextPos = [row, nextObject + 1, nextDirection(direction)];
-
-          let visitedColumn = column;
-          while (visitedColumn > nextObject) {
-            visited.add(`${row},${visitedColumn}`);
-
-            if (stopsByColumn.get(`${visitedColumn}`)?.filter((v) => v < row)) {
-              insertedObjects.add(`${row},${visitedColumn - 1}`);
-            }
-            visitedColumn--;
-          }
         }
         break;
     }
 
-    stops.add(`${nextPos}`);
-    stopsByRow.set(`${nextPos[0]}`, [
-      ...(stopsByRow.get(`${nextPos[0]}`) ?? []),
-      nextPos[1],
-    ]);
+    if (visited.has(nextPos.toString())) return false;
+    visited.add(nextPos.toString());
 
-    stopsByColumn.set(`${nextPos[1]}`, [
-      ...(stopsByColumn.get(`${nextPos[1]}`) ?? []),
-      nextPos[0],
-    ]);
     pos = nextPos;
   }
 
-  return insertedObjects.size;
-  // return insertedObjects.size;
+  return true;
 }
 
 function parseMap(map: string[][]) {
   let objectsByRow = new Map<number, number[]>();
   let objectsByColumn = new Map<number, number[]>();
+
   let start = [0, 0, Direction.Up];
   for (let r = 0; r < map.length; r++) {
-    process.stdout.write(`${r}:`);
+    objectsByRow.set(r, []);
+  }
+  for (let c = 0; c < map[0].length; c++) {
+    objectsByColumn.set(c, []);
+  }
+
+  for (let r = 0; r < map.length; r++) {
     for (let c = 0; c < map[r].length; c++) {
       if (map[r][c] === '#') {
-        process.stdout.write(c.toString() + ',');
         objectsByRow.set(r, [...(objectsByRow.get(r) ?? []), c]);
         objectsByColumn.set(c, [...(objectsByColumn.get(c) ?? []), r]);
       }
@@ -249,15 +223,13 @@ function parseMap(map: string[][]) {
         start = [r, c, direction];
       }
     }
-
-    process.stdout.write('\n');
   }
 
   return { objectsByRow, objectsByColumn, start };
 }
 
 async function main() {
-  let input = await loadInput('input/day6');
+  let input = await loadInput('input/day6.example');
   let distance = findLoops(input);
 
   console.log(distance);
