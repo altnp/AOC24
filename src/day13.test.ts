@@ -40,6 +40,6 @@ describe('day13', () => {
     let data = await loadData('input/day13');
     let result = tokenCountWithOffset(data);
 
-    expect(result).toBe(31761);
+    expect(result).toBe(90798500745591);
   });
 });
