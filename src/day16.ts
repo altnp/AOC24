@@ -166,14 +166,14 @@ function findSteps(map: string[][], start: Point, end: Point) {
   ) {
     let key = getKey({ point: { x, y }, direction });
 
-    if (visited.has(key) && visited.get(key)! <= score) {
+    if (visited.has(key) && visited.get(key)! < score) {
       return;
     }
 
     if (x == end.x && y == end.y) {
       if (score <= minScore) {
         minScore = score;
-        steps.map((s) => `${x},${y}`).forEach((s) => onBestPath.add(s));
+        steps.map((s) => `${s.x},${s.y}`).forEach((s) => onBestPath.add(s));
       }
       return;
     }
