@@ -1,77 +1,38 @@
-import { stdout } from 'process';
-import { loadData, Obj, Pair, wideMove, widenMap } from './day15';
-import * as readline from 'readline/promises';
+import { runProgram } from './day17';
 
-async function main() {
-  let rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+let program = [2, 4, 1, 5, 7, 5, 0, 3, 1, 6, 4, 3, 5, 5, 3, 0];
+let a = Math.pow(8, program.length - 1);
+let b = 0;
+let c = 0;
+let result = runProgram(a, b, c, program);
 
-  let { map, moves } = await loadData('input/day15');
-  map = widenMap(map);
-  let robotPos: Pair | null = null;
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === Obj.Robot) {
-        robotPos = { x, y };
-        break;
-      }
-    }
+let digitToMatch = program.length;
+while (digitToMatch > 0) {
+  digitToMatch = digitToMatch - 1;
 
-    if (robotPos) break;
-  }
-  robotPos = robotPos ?? { x: 0, y: 0 };
+  console.log(`Matching ${digitToMatch}`);
+  let increment = Math.pow(8, digitToMatch);
 
-  for (let i = 0; i < moves.length; i++) {
-    let m = moves[i];
-
-    let copy = copyMap(map);
-    robotPos = wideMove(map, robotPos, m);
-
-    if (validate(map).length > 0) {
-      printMap(copy);
-      console.log(m);
-      printMap(map);
-      break;
-    }
+  program.slice(digitToMatch);
+  while (!match(program, result, digitToMatch)) {
+    console.log(`${a}+${increment}(8^${digitToMatch})`);
+    console.log(a + increment);
+    a += increment;
+    result = runProgram(a, b, c, program);
+    console.log(result.join(','));
+    console.log('');
   }
 }
 
-function validate(map: string[][]) {
-  for (let r = 0; r < map.length; r++) {
-    let row = map[r];
-    let pc = '';
-    for (let i = 0; i < row.length; i++) {
-      let c = row[i];
-      if (c === '[' && pc === '[') {
-        return [r, i];
-      }
+function match(program: number[], result: number[], digitToMatch: number) {
+  let pmatch = program.slice(digitToMatch);
+  let rmatch = result.slice(digitToMatch);
 
-      if (c === ']' && pc === ']') {
-        return [r, i];
-      }
-
-      pc = c;
+  for (let [i, e] of pmatch.entries()) {
+    if (rmatch[i] != e) {
+      return false;
     }
   }
 
-  return [];
+  return true;
 }
-
-function copyMap(array: string[][]): string[][] {
-  return array.map((row) => [...row]);
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function printMap(map: string[][]) {
-  // stdout.write('\x1b[H');
-  for (const row of map) {
-    stdout.write(row.join('') + '\n');
-  }
-}
-
-main();
