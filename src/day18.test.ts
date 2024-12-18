@@ -30,6 +30,6 @@ describe('day18', () => {
   test('part2', async () => {
     let data = await loadData('input/day18');
     let result = findLastEscape(data, 71, 71);
-    expect(result).toStrictEqual({ x: 6, y: 1 });
+    expect(result).toStrictEqual({ x: 30, y: 12 });
   });
 });
