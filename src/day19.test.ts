@@ -51,6 +51,6 @@ describe('day19', () => {
   test('part2', async () => {
     let data = await loadData('input/day19');
     let result = findPossibleDesignItterations(data.patterns, data.designs);
-    expect(result).toBe(16);
+    expect(result).toBe(705756472327497);
   });
 });

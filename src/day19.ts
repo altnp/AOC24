@@ -56,14 +56,9 @@ function findPossibleDesigns(patterns: string[], designs: string[]) {
 
 function findPossibleDesignItterations(patterns: string[], designs: string[]) {
   patterns = patterns.sort((a, b) => b.length - a.length);
-  let possibleDesigns = new Map<string, number>();
-  let impossibleDesigns = new Set<string>();
+  let cache = new Map<string, number>();
 
   function possibleItterations(desgin: string, wip: string) {
-    if (impossibleDesigns.has(desgin)) {
-      return 0;
-    }
-
     if (desgin === wip) {
       return 1;
     }
@@ -73,21 +68,16 @@ function findPossibleDesignItterations(patterns: string[], designs: string[]) {
     }
 
     let d = desgin.slice(wip.length);
-    if (possibleDesigns.has(d)) {
-      return possibleDesigns.get(d)!;
+    if (cache.has(d)) {
+      return cache.get(d)!;
     }
 
     let results = 0;
     for (let p of patterns) {
-      let i = possibleItterations(d, p);
-      results += i;
+      results += possibleItterations(d, p);
     }
 
-    if (results === 0) {
-      impossibleDesigns.add(d);
-    } else {
-      possibleDesigns.set(d, results);
-    }
+    cache.set(d, results);
 
     return results;
   }
