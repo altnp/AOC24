@@ -1,38 +1,38 @@
-import { runProgram } from './day17';
+import { stdout } from 'process';
 
-let program = [2, 4, 1, 5, 7, 5, 0, 3, 1, 6, 4, 3, 5, 5, 3, 0];
-let a = Math.pow(8, program.length - 1);
-let b = 0;
-let c = 0;
-let result = runProgram(a, b, c, program);
+let map = [
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+  Array(9).fill('.'),
+];
 
-let digitToMatch = program.length;
-while (digitToMatch > 0) {
-  digitToMatch = digitToMatch - 1;
-
-  console.log(`Matching ${digitToMatch}`);
-  let increment = Math.pow(8, digitToMatch);
-
-  program.slice(digitToMatch);
-  while (!match(program, result, digitToMatch)) {
-    console.log(`${a}+${increment}(8^${digitToMatch})`);
-    console.log(a + increment);
-    a += increment;
-    result = runProgram(a, b, c, program);
-    console.log(result.join(','));
-    console.log('');
-  }
+let p = { x: 4, y: 4 };
+function fill(dx: number, dy: number) {
+  map[p.y + dy][p.x + dx] = '#';
+  print();
 }
 
-function match(program: number[], result: number[], digitToMatch: number) {
-  let pmatch = program.slice(digitToMatch);
-  let rmatch = result.slice(digitToMatch);
-
-  for (let [i, e] of pmatch.entries()) {
-    if (rmatch[i] != e) {
-      return false;
+function print() {
+  for (let row of map) {
+    for (let c of row) {
+      stdout.write(c);
     }
+    stdout.write('\n');
   }
+  stdout.write('\n');
+}
 
-  return true;
+for (let distance = 1; distance <= 3; distance++) {
+  for (let offset = 0; offset <= distance; offset++) {
+    fill(offset, distance - offset);
+    fill(-offset, distance - offset);
+    fill(offset, -distance + offset);
+    fill(-offset, -distance + offset);
+  }
 }
