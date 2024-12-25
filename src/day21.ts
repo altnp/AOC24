@@ -144,10 +144,10 @@ function findRecursiveInput(keyPads: KeyPad[], code: string[]) {
       return [[]];
     }
 
-    let cacheKey = `${keyPad.currentKey}+${sequence.join('')}`;
-    if (keyPad.cache.has(cacheKey)) {
-      return keyPad.cache.get(cacheKey)!;
-    }
+    // let cacheKey = `${keyPad.currentKey}+${sequence.join('')}`;
+    // if (keyPad.cache.has(cacheKey)) {
+    //   return keyPad.cache.get(cacheKey)!;
+    // }
 
     let targetKey = sequence.shift()!;
     let target = keyPad.keyMap.get(targetKey)!;
@@ -164,7 +164,7 @@ function findRecursiveInput(keyPads: KeyPad[], code: string[]) {
       paths.forEach((p) => result.push([...p, 'A', ...sp]));
     });
 
-    keyPad.cache.set(cacheKey, result);
+    // keyPad.cache.set(cacheKey, result);
     sequence.unshift(targetKey);
     keyPad.currentKey = startKey;
     return result;
@@ -185,12 +185,17 @@ function findRecursiveInput(keyPads: KeyPad[], code: string[]) {
     return allInputs.filter((i) => i.length === minLength);
   }
 
-  let sequences = [code];
-  for (let [i, keyPad] of keyPads.entries()) {
-    sequences = findInputsForAllSequences(keyPad, sequences);
+  let sum = 0;
+  for (let d of code) {
+    let sequences = [[d]];
+    for (let [i, keyPad] of keyPads.entries()) {
+      sequences = findInputsForAllSequences(keyPad, sequences);
+    }
+    sum += sequences[0].length;
+    keyPads[0].currentKey = d;
   }
 
-  return sequences[0].length;
+  return sum;
 }
 
 const directionPadCache = new Map<string, string[][]>();

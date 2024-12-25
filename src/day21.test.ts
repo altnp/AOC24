@@ -50,8 +50,37 @@ describe('day21', () => {
     expect(result).toBe(64);
   });
 
+  test('hypothisis', () => {
+    let keyPads = createKeyPads(1);
+    let sum = 0;
+    sum += findRecursiveInput(keyPads, '0'.split(''));
+    keyPads[0].currentKey = '0';
+    sum += findRecursiveInput(keyPads, '2'.split(''));
+    keyPads[0].currentKey = '2';
+    sum += findRecursiveInput(keyPads, '9'.split(''));
+    keyPads[0].currentKey = '9';
+    sum += findRecursiveInput(keyPads, 'A'.split(''));
+    expect(sum).toBe(68);
+  });
+
   test('part1', () => {
     let keyPads = createKeyPads(1);
+    let result = findRecursiveInput(keyPads, '593A'.split(''));
+    expect(result).toBe(74);
+    result = findRecursiveInput(keyPads, '508A'.split(''));
+    expect(result).toBe(72);
+    result = findRecursiveInput(keyPads, '386A'.split(''));
+    expect(result).toBe(68);
+    result = findRecursiveInput(keyPads, '459A'.split(''));
+    expect(result).toBe(74);
+    result = findRecursiveInput(keyPads, '246A'.split(''));
+    expect(result).toBe(70);
+
+    let x = 593 * 74 + 508 * 72 + 386 * 68 + 459 * 64 + 246 * 70;
+  });
+
+  test('part2', () => {
+    let keyPads = createKeyPads(25);
     let result = findRecursiveInput(keyPads, '593A'.split(''));
     expect(result).toBe(74);
     result = findRecursiveInput(keyPads, '508A'.split(''));
