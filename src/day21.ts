@@ -134,45 +134,19 @@ function findShortestPaths(
     return changes === minChanges;
   });
 
-  // let result = filteredDirections.reduce((pv, v, i) => {
-  //   if (i === 0) return v;
-
-  //   let currentKey = directionPadMap.get(v[v.length - 1])!;
-  //   let previousKey = directionPadMap.get(pv[pv.length - 1])!;
-
-  //   let a = directionPadMap.get('A')!;
-  //   let currentDelta =
-  //     Math.abs(currentKey.x - a.x) + Math.abs(currentKey.y - a.y);
-  //   let prevDelta =
-  //     Math.abs(previousKey.x - a.x) + Math.abs(previousKey.y - a.y);
-
-  //   return currentDelta < prevDelta ? v : pv;
-  // }, []);
-
-  let result = filteredDirections[0];
-  if (filteredDirections.length > 1) {
-    result = filteredDirections.filter((f) => {
+  let result =
+    filteredDirections.find((f) => {
       let d = [...f];
+      const order = ['<', '^', 'v', '>'];
 
-      let i = d.indexOf('<');
-      if (i !== -1 && i !== 0) return false;
-      d = d.filter((d) => d != '<');
-
-      i = d.indexOf('^');
-      if (i !== -1 && i !== 0) return false;
-      d = d.filter((d) => d != '^');
-
-      i = d.indexOf('v');
-      if (i !== -1 && i !== 0) return false;
-      d = d.filter((d) => d != 'v');
-
-      i = d.indexOf('>');
-      if (i !== -1 && i !== 0) return false;
-      d = d.filter((d) => d != '>');
+      for (const char of order) {
+        const i = d.indexOf(char);
+        if (i !== -1 && i !== 0) return false;
+        d = d.filter((dir) => dir !== char);
+      }
 
       return true;
-    })[0];
-  }
+    }) || filteredDirections[0];
 
   cache.set(cacheKey, result);
   return result;
