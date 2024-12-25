@@ -45,6 +45,6 @@ describe('day24', () => {
     let { gates } = await loadData('input/day24');
     let result = findInvalidAdders(gates).join(',');
 
-    expect(result).toBe('');
+    expect(result).toBe('bmn,jss,mvb,rds,wss,z08,z18,z23');
   });
 });
