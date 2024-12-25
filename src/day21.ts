@@ -7,7 +7,7 @@ type KeyPad = {
   keyPad: string[][];
   currentKey: string;
   keyMap: Map<string, Pair>;
-  cache: Map<string, string[][]>;
+  cache: Map<string, string[]>;
 };
 
 const numPad = [
@@ -52,7 +52,7 @@ function getDelta(direction: Direction): { dx: number; dy: number } {
 
 function findShortestPaths(
   keyPad: string[][],
-  cache: Map<string, string[][]>,
+  cache: Map<string, string[]>,
   start: Pair,
   target: Pair
 ) {
@@ -125,7 +125,7 @@ function findShortestPaths(
     Number.MAX_SAFE_INTEGER
   );
 
-  const filteredDirections = validDirections.filter((direction) => {
+  let filteredDirections = validDirections.filter((direction) => {
     const changes = direction.reduce(
       (changes, current, index, array) =>
         index > 0 && current !== array[index - 1] ? changes + 1 : changes,
@@ -134,93 +134,114 @@ function findShortestPaths(
     return changes === minChanges;
   });
 
-  cache.set(cacheKey, filteredDirections);
-  return filteredDirections;
+  // let result = filteredDirections.reduce((pv, v, i) => {
+  //   if (i === 0) return v;
+
+  //   let currentKey = directionPadMap.get(v[v.length - 1])!;
+  //   let previousKey = directionPadMap.get(pv[pv.length - 1])!;
+
+  //   let a = directionPadMap.get('A')!;
+  //   let currentDelta =
+  //     Math.abs(currentKey.x - a.x) + Math.abs(currentKey.y - a.y);
+  //   let prevDelta =
+  //     Math.abs(previousKey.x - a.x) + Math.abs(previousKey.y - a.y);
+
+  //   return currentDelta < prevDelta ? v : pv;
+  // }, []);
+
+  let result = filteredDirections[0];
+  if (filteredDirections.length > 1) {
+    result = filteredDirections.filter((f) => {
+      let d = [...f];
+
+      let i = d.indexOf('<');
+      if (i !== -1 && i !== 0) return false;
+      d = d.filter((d) => d != '<');
+
+      i = d.indexOf('^');
+      if (i !== -1 && i !== 0) return false;
+      d = d.filter((d) => d != '^');
+
+      i = d.indexOf('v');
+      if (i !== -1 && i !== 0) return false;
+      d = d.filter((d) => d != 'v');
+
+      i = d.indexOf('>');
+      if (i !== -1 && i !== 0) return false;
+      d = d.filter((d) => d != '>');
+
+      return true;
+    })[0];
+  }
+
+  cache.set(cacheKey, result);
+  return result;
 }
 
 function findRecursiveInput(keyPads: KeyPad[], code: string[]) {
-  function findInputs(keyPad: KeyPad, sequence: string[]) {
-    if (sequence.length === 0) {
-      return [[]];
-    }
+  function findInputs(keyPad: KeyPad, sequenceMap: Map<string, number>) {
+    let result = new Map<string, number>();
+    const mergeResult = (key: string, value: number) =>
+      result.set(key, result.has(key) ? result.get(key)! + value : value);
 
-    // let cacheKey = `${keyPad.currentKey}+${sequence.join('')}`;
-    // if (keyPad.cache.has(cacheKey)) {
-    //   return keyPad.cache.get(cacheKey)!;
-    // }
+    let sequenceQueue = [...sequenceMap.entries()];
 
-    let targetKey = sequence.shift()!;
-    let target = keyPad.keyMap.get(targetKey)!;
-    let startKey = keyPad.currentKey;
-    let start = keyPad.keyMap.get(keyPad.currentKey)!;
+    while (sequenceQueue.length > 0) {
+      let [sequenceKey, count] = sequenceQueue.shift()!;
+      let sequence = sequenceKey.split('');
 
-    let paths = findShortestPaths(keyPad.keyPad, keyPad.cache, start, target);
+      while (sequence.length > 0) {
+        let targetKey = sequence.shift()!;
+        let target = keyPad.keyMap.get(targetKey)!;
+        let startKey = keyPad.currentKey;
+        let start = keyPad.keyMap.get(keyPad.currentKey)!;
 
-    keyPad.currentKey = targetKey;
-    let subSequencePaths = findInputs(keyPad, sequence);
+        let path = findShortestPaths(
+          keyPad.keyPad,
+          keyPad.cache,
+          start,
+          target
+        );
 
-    let result: string[][] = [];
-    subSequencePaths.forEach((sp) => {
-      paths.forEach((p) => result.push([...p, 'A', ...sp]));
-    });
-
-    // keyPad.cache.set(cacheKey, result);
-    sequence.unshift(targetKey);
-    keyPad.currentKey = startKey;
-    return result;
-  }
-
-  function findInputsForAllSequences(keyPad: KeyPad, sequences: string[][]) {
-    let allInputs: string[][] = [];
-    let minLength = Number.MAX_SAFE_INTEGER;
-    for (let sequence of sequences) {
-      let seqInputs = findInputs(keyPad, sequence);
-      let seqMin = Math.min(...seqInputs.map((s) => s.length));
-      allInputs.push(...seqInputs);
-      if (minLength > seqMin) {
-        minLength = seqMin;
+        mergeResult([...path, 'A'].join(''), count);
+        keyPad.currentKey = targetKey;
       }
     }
 
-    return allInputs.filter((i) => i.length === minLength);
+    return result;
   }
 
   let sum = 0;
   for (let d of code) {
-    let sequences = [[d]];
+    let sequenceMap = new Map<string, number>([[d, 1]]);
     for (let [i, keyPad] of keyPads.entries()) {
-      sequences = findInputsForAllSequences(keyPad, sequences);
+      sequenceMap = findInputs(keyPad, sequenceMap);
     }
-    sum += sequences[0].length;
+    sum += Array.from(sequenceMap.entries()).reduce(
+      (sum, [sequence, value]) => sum + value * sequence.length,
+      0
+    );
     keyPads[0].currentKey = d;
   }
 
   return sum;
 }
-
-const directionPadCache = new Map<string, string[][]>();
+const directionPadCache = new Map<string, string[]>();
 const createKeyPads = (roboCount: number) => [
   {
-    name: 'depressurized',
+    name: 'numeric',
     keyPad: numPad,
     currentKey: 'A',
     keyMap: numPadMap,
-    cache: new Map<string, string[][]>(),
+    cache: new Map<string, string[]>(),
   },
   ...Array.from({ length: roboCount }, (_, i) => ({
-    name: `radiation-${i + 1}`,
+    name: `directional-${i + 1}`,
     keyPad: directionPad,
     currentKey: 'A',
     keyMap: directionPadMap,
     cache: directionPadCache,
   })),
-  {
-    name: 'freezing',
-    keyPad: directionPad,
-    currentKey: 'A',
-    keyMap: directionPadMap,
-    cache: directionPadCache,
-  },
 ];
 
 export {
@@ -229,4 +250,5 @@ export {
   createKeyPads,
   numPad,
   directionPad,
+  numPadMap,
 };
